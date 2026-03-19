@@ -2,6 +2,9 @@ import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { UploadCloud, CheckCircle, Image as ImageIcon } from 'lucide-react';
+import { storage, db } from '../firebase/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 export const Upload = () => {
   const [file, setFile] = useState(null);
@@ -11,7 +14,6 @@ export const Upload = () => {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
-  const addImage = useStore(state => state.addImage);
   const user = useStore(state => state.user);
 
   const categories = ['Nature', 'Travel', 'Technology', 'Art', 'Architecture'];
@@ -45,29 +47,41 @@ export const Upload = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!file) return;
+    if (!file || !user) return;
 
     setIsUploading(true);
+    
+    try {
+      // Create a unique filename based on time to prevent overwrites
+      const uniqueFilename = `${Date.now()}-${file.name}`;
+      const imageRef = ref(storage, `images/${user.uid}/${uniqueFilename}`);
+      
+      // Upload the original file safely without compression or loss
+      const snapshot = await uploadBytes(imageRef, file);
+      const downloadUrl = await getDownloadURL(snapshot.ref);
 
-    // Simulate upload delay
-    setTimeout(() => {
-      const newImage = {
-        id: Date.now().toString(),
-        url: preview, // Using the base64 preview as url for mockup
+      // Track file in Firestore
+      await addDoc(collection(db, 'images'), {
+        url: downloadUrl,
         title: title || 'Untitled',
-        user: user?.username || 'guest',
-        userNickname: user?.nickname || user?.username || 'Guest',
+        user: user.username,
+        userNickname: user.nickname,
+        authorId: user.uid,
         category,
         likes: 0,
-        height: Math.floor(Math.random() * 200) + 250 // Random height for masonry layout effect
-      };
+        height: Math.floor(Math.random() * 200) + 250,
+        createdAt: serverTimestamp()
+      });
 
-      addImage(newImage);
       setIsUploading(false);
-      navigate('/profile/' + (user?.username || 'guest'));
-    }, 1500);
+      navigate('/profile/' + user.username);
+    } catch (error) {
+      console.error("Error during upload phase:", error);
+      alert("Failed to securely upload original file. Ensure Firebase is configured.");
+      setIsUploading(false);
+    }
   };
 
   return (

@@ -15,6 +15,15 @@ const ProtectedRoute = ({ children }) => {
 };
 
 export const App = () => {
+  const initAuth = useStore(state => state.initAuth);
+  const loading = useStore(state => state.loading);
+
+  useEffect(() => {
+    const unsubscribe = initAuth();
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [initAuth]);
 
   // Disable right-click globally for "original quality" protection mockup
   useEffect(() => {
@@ -26,6 +35,10 @@ export const App = () => {
     document.addEventListener('contextmenu', handleContextMenu);
     return () => document.removeEventListener('contextmenu', handleContextMenu);
   }, []);
+
+  if (loading) {
+    return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading Prism...</div>;
+  }
 
   return (
     <Router>

@@ -9,15 +9,23 @@ export const Login = () => {
   const navigate = useNavigate();
   const login = useStore(state => state.login);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    login({ username: email.split('@')[0] || 'user', email });
-    navigate('/');
+    try {
+      await login(email, password);
+      navigate('/');
+    } catch (err) {
+      alert(err.message || 'Login failed.');
+    }
   };
 
-  const handleGuest = () => {
-    login({ username: 'guest', email: 'guest@prism.app' });
-    navigate('/');
+  const handleGuest = async () => {
+    try {
+      await login('guest@prism.app');
+      navigate('/');
+    } catch (err) {
+      alert(err.message || 'Guest login failed.');
+    }
   };
 
   return (
