@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useParams, Navigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { ImageCard } from '../components/ImageCard';
-import { Image as ImageIcon, Heart, Edit2, Check } from 'lucide-react';
+import { Image as ImageIcon, Heart, Edit2, Check, User as UserIcon } from 'lucide-react';
 
 export const Profile = () => {
   const { username } = useParams();
@@ -12,7 +12,9 @@ export const Profile = () => {
   const images = useStore(state => state.images);
   
   const isOwnProfile = currentUser && currentUser.username === username;
-  const profileUser = isOwnProfile ? currentUser : (users[username] || { username, nickname: username });
+  const profileUser = isOwnProfile 
+    ? currentUser 
+    : (Object.values(users).find(u => u.username === username) || { username, nickname: username });
   const displayNickname = profileUser.nickname || profileUser.username;
 
   const [isEditing, setIsEditing] = useState(false);
@@ -33,73 +35,85 @@ export const Profile = () => {
   };
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in" style={{ paddingBottom: '4rem' }}>
       <header className="glass" style={{
-        padding: '3rem', borderRadius: '24px', marginBottom: '3rem',
-        display: 'flex', alignItems: 'center', gap: '2rem', flexWrap: 'wrap'
+        padding: '3.5rem', borderRadius: '32px', marginBottom: '3.5rem',
+        display: 'flex', alignItems: 'center', gap: '2.5rem', flexWrap: 'wrap',
+        position: 'relative', overflow: 'hidden'
       }}>
+        {/* Background Accent */}
+        <div style={{ position: 'absolute', top: 0, right: 0, width: '300px', height: '300px', background: 'radial-gradient(circle, var(--accent) 0%, transparent 70%)', opacity: 0.05, filter: 'blur(50px)' }}></div>
+
         <div style={{
-          width: '120px', height: '120px', borderRadius: '50%',
+          width: '140px', height: '140px', borderRadius: '48px',
           background: 'linear-gradient(135deg, var(--accent), #e879f9)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: 'white', fontSize: '3rem', fontWeight: 700,
-          boxShadow: '0 10px 25px -5px rgba(124, 58, 237, 0.5)'
+          color: 'white', fontSize: '3.5rem', fontWeight: 800,
+          boxShadow: '0 20px 40px -10px rgba(124, 58, 237, 0.4)',
+          position: 'relative', zIndex: 1
         }}>
           {displayNickname.charAt(0).toUpperCase()}
         </div>
 
-        <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.25rem' }}>
+        <div style={{ flex: 1, position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginBottom: '0.5rem' }}>
             {isEditing ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <input 
                   type="text" 
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                   className="input-field"
-                  style={{ fontSize: '2rem', padding: '0.5rem', fontWeight: 600, width: '300px' }}
+                  style={{ fontSize: '2.5rem', padding: '0.75rem 1rem', fontWeight: 700, minWidth: '350px', backgroundColor: 'var(--bg-primary)' }}
                   autoFocus
                 />
-                <button onClick={handleSaveNickname} className="btn glass" style={{ padding: '0.5rem' }}>
-                  <Check size={20} color="var(--success)" />
+                <button onClick={handleSaveNickname} className="btn-primary" style={{ width: '56px', height: '56px', borderRadius: '16px' }}>
+                  <Check size={28} />
                 </button>
               </div>
             ) : (
               <>
-                <h2 style={{ fontSize: '2.5rem', margin: 0 }}>{displayNickname}</h2>
+                <h2 style={{ fontSize: '3rem', margin: 0, letterSpacing: '-0.04em' }}>{displayNickname}</h2>
                 {isOwnProfile && (
-                  <button onClick={() => setIsEditing(true)} className="btn glass" style={{ padding: '0.5rem' }} title="Edit Nickname">
-                    <Edit2 size={18} />
+                  <button onClick={() => setIsEditing(true)} style={{ padding: '0.5rem', color: 'var(--text-secondary)', transition: 'color 0.2s' }}>
+                    <Edit2 size={24} />
                   </button>
                 )}
               </>
             )}
           </div>
           
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', maxWidth: '500px' }}>
-            A passionate photographer sharing uncompressed moments captured in full fidelity.
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', maxWidth: '600px', fontSize: '1.1rem' }}>
+            A dedicated Prism artist capturing and sharing the world in uncompressed, original fidelity.
           </p>
 
-          <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <ImageIcon size={20} color="var(--text-secondary)" />
-              <div><strong style={{ fontSize: '1.25rem' }}>{userImages.length}</strong> Shots</div>
+          <div style={{ display: 'flex', gap: '2.5rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ color: 'var(--accent)', backgroundColor: 'var(--bg-tertiary)', padding: '0.75rem', borderRadius: '16px' }}>
+                <ImageIcon size={24} />
+              </div>
+              <div>
+                <span style={{ display: 'block', fontSize: '1.5rem', fontWeight: 800, lineHeight: 1 }}>{userImages.length}</span>
+                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Shots Published</span>
+              </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Heart size={20} color="var(--text-secondary)" />
-              <div><strong style={{ fontSize: '1.25rem' }}>{totalLikes}</strong> Likes Received</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{ color: '#ef4444', backgroundColor: 'var(--bg-tertiary)', padding: '0.75rem', borderRadius: '16px' }}>
+                <Heart size={24} fill="#ef4444" />
+              </div>
+              <div>
+                <span style={{ display: 'block', fontSize: '1.5rem', fontWeight: 800, lineHeight: 1 }}>{totalLikes}</span>
+                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Likes Received</span>
+              </div>
             </div>
           </div>
         </div>
-        
-        {!isOwnProfile && (
-          <button className="btn btn-primary" style={{ padding: '0.75rem 2rem', alignSelf: 'center' }}>
-            Follow
-          </button>
-        )}
       </header>
 
-      <h3 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '1rem' }}>Original Quality Shots</h3>
+      <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '1.5rem', marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+        <h3 style={{ fontSize: '1.75rem', margin: 0, letterSpacing: '-0.02em' }}>Original Gallery</h3>
+        <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Showing {userImages.length} items</span>
+      </div>
       
       {userImages.length > 0 ? (
         <div className="masonry-grid">
@@ -108,10 +122,10 @@ export const Profile = () => {
           ))}
         </div>
       ) : (
-        <div style={{ textAlign: 'center', padding: '5rem 0', color: 'var(--text-secondary)' }}>
-          <ImageIcon size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
-          <h3>No uploads yet</h3>
-          <p>This user hasn't shared any original photography.</p>
+        <div style={{ textAlign: 'center', padding: '8rem 0', color: 'var(--text-secondary)', backgroundColor: 'var(--bg-secondary)', borderRadius: '32px' }}>
+          <ImageIcon size={64} style={{ margin: '0 auto 1.5rem', opacity: 0.15 }} />
+          <h3 style={{ fontSize: '1.5rem', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Gallery is empty.</h3>
+          <p>No photography has been published to this profile yet.</p>
         </div>
       )}
     </div>

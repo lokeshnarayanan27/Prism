@@ -1,7 +1,8 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Home, Search, UploadCloud, User, LogOut, Camera } from 'lucide-react';
+import { Home, Search, UploadCloud, User, LogOut } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import { Logo } from './Logo';
 
 export const Sidebar = () => {
   const { user, logout } = useStore();
@@ -21,7 +22,6 @@ export const Sidebar = () => {
 
   return (
     <>
-      {/* Desktop Sidebar */}
       <aside style={{
         position: 'fixed', left: 0, top: 0, bottom: 0,
         width: '240px', backgroundColor: 'var(--bg-secondary)',
@@ -30,13 +30,10 @@ export const Sidebar = () => {
         zIndex: 50
       }} className="sidebar-desktop">
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '3rem' }}>
-          <div style={{
-            background: 'linear-gradient(135deg, var(--accent), #e879f9)',
-            padding: '0.5rem', borderRadius: '12px', color: 'white'
-          }}>
-            <Camera size={24} />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Logo size={28} />
           </div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0, letterSpacing: '-0.05em' }}>Prism</h1>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0, letterSpacing: '-0.05em', color: 'var(--text-primary)' }}>Prism</h1>
         </div>
 
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
@@ -61,8 +58,6 @@ export const Sidebar = () => {
         </nav>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: 'auto' }}>
-
-          
           <button 
             onClick={handleLogout}
             style={{ 
@@ -79,7 +74,6 @@ export const Sidebar = () => {
         </div>
       </aside>
 
-      {/* Mobile Bottom Nav */}
       <style>{`
         .sidebar-desktop { display: none !important; }
         .bottom-nav { display: flex !important; }
@@ -87,8 +81,9 @@ export const Sidebar = () => {
           .sidebar-desktop { display: flex !important; }
           .bottom-nav { display: none !important; }
         }
-        .sidebar-btn:hover { background-color: var(--bg-tertiary); color: var(--text-primary); }
+        .sidebar-btn:hover { background-color: var(--bg-tertiary); }
       `}</style>
+      
       <nav className="bottom-nav glass" style={{
         position: 'fixed', bottom: 0, left: 0, right: 0,
         height: '60px', zIndex: 50, display: 'none',
@@ -105,7 +100,7 @@ export const Sidebar = () => {
               padding: '0.5rem'
             })}
           >
-            <item.icon size={24} />
+            <item.icon size={22} />
             <span style={{ fontSize: '10px', marginTop: '2px', fontWeight: 500 }}>{item.name}</span>
           </NavLink>
         ))}

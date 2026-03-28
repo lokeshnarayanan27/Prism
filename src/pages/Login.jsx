@@ -1,106 +1,332 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
-import { Camera, Mail, Lock, ArrowRight } from 'lucide-react';
+import { Logo } from '../components/Logo';
+
+const inputStyle = {
+  width: '100%',
+  padding: '10px 14px',
+  border: '1px solid #333',
+  borderRadius: '5px',
+  backgroundColor: '#1a1a1a',
+  fontSize: '0.9rem',
+  color: '#f5f5f5',
+  outline: 'none',
+  transition: 'border-color 0.2s',
+  boxSizing: 'border-box',
+};
+
+const primaryBtnStyle = (disabled) => ({
+  width: '100%',
+  padding: '9px',
+  borderRadius: '8px',
+  border: 'none',
+  backgroundColor: disabled ? '#b2dffc' : '#0095f6',
+  color: '#fff',
+  fontWeight: 700,
+  fontSize: '0.9rem',
+  cursor: disabled ? 'not-allowed' : 'pointer',
+  transition: 'background-color 0.2s',
+  letterSpacing: '0.3px',
+});
+
+const dividerStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '18px',
+  margin: '14px 0',
+  color: '#737373',
+};
+
+const dividerLine = {
+  flex: 1,
+  height: '1px',
+  backgroundColor: '#333',
+};
 
 export const Login = () => {
+  const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const navigate = useNavigate();
-  const login = useStore(state => state.login);
+  const [username, setUsername] = useState('');
+  const [nickname, setNickname] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = async (e) => {
+  const navigate = useNavigate();
+  const { login, signUp, user } = useStore();
+
+  // Navigate to home as soon as the store confirms the user is set.
+  // This avoids the race condition where navigate('/') fires before
+  // _loadUser completes, causing ProtectedRoute to redirect back to login.
+  useEffect(() => {
+    if (user) navigate('/', { replace: true });
+  }, [user, navigate]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setSuccess('');
+    setIsLoading(true);
     try {
-      await login(email, password);
-      navigate('/');
+      if (isSignUp) {
+        if (!username) { setError('Username is required.'); return; }
+        const data = await signUp(email, password, username, nickname);
+        if (!data?.session) {
+          setSuccess('✅ Account created! Check your inbox and confirm your email, then come back to log in.');
+        } else {
+          setSuccess('Account created! Signing you in...');
+          // user effect will navigate once store is updated
+        }
+        setIsSignUp(false);
+        setEmail(''); setPassword(''); setUsername(''); setNickname('');
+      } else {
+        await login(email, password);
+        // Don't navigate here — useEffect above will do it when user is set in store
+      }
     } catch (err) {
-      alert(err.message || 'Login failed.');
+      if (err.message === 'EMAIL_RATE_LIMIT') {
+        setError('RATE_LIMIT');
+      } else if (err.message === 'EMAIL_NOT_CONFIRMED') {
+        setError('EMAIL_NOT_CONFIRMED');
+      } else if (err.message === 'ALREADY_REGISTERED') {
+        setError('ALREADY_REGISTERED');
+      } else {
+        setError(err.message || 'Something went wrong. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleGuest = async () => {
+    setError('');
+    setSuccess('');
+    setIsLoading(true);
     try {
       await login('guest@prism.app');
-      navigate('/');
+      // Don't navigate here — useEffect above will do it when user is set in store
     } catch (err) {
-      alert(err.message || 'Guest login failed.');
+      setError(err.message || 'Guest login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  const canSubmit = !isLoading && email.trim() && password.trim() && (isSignUp ? username.trim() : true);
+
   return (
     <div style={{
-      minHeight: '100vh', display: 'flex', flexDirection: 'column',
-      justifyContent: 'center', alignItems: 'center', padding: '1rem',
-      background: 'url("https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop") center/cover no-repeat',
-      position: 'relative'
+      minHeight: '100vh',
+      backgroundColor: '#0a0a0a',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px',
+      fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
     }}>
-      {/* Dark overlay */}
-      <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }}></div>
-      
-      <div className="glass animate-fade-in" style={{
-        position: 'relative', zIndex: 10, width: '100%', maxWidth: '440px',
-        padding: '3rem', borderRadius: '24px', textAlign: 'center',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+
+      {/* Main Card */}
+      <div style={{
+        backgroundColor: '#121212',
+        border: '1px solid #262626',
+        borderRadius: '12px',
+        padding: '40px 40px 28px',
+        width: '100%',
+        maxWidth: '360px',
+        textAlign: 'center',
+        marginBottom: '10px',
       }}>
-        <div style={{
-          background: 'linear-gradient(135deg, var(--accent), #e879f9)',
-          width: '64px', height: '64px', borderRadius: '16px',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          margin: '0 auto 1.5rem', color: 'white'
-        }}>
-          <Camera size={32} />
+
+        {/* Logo */}
+        <div style={{ marginBottom: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: 'white',
+          }}>
+            <Logo size={42} />
+          </div>
+          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#f5f5f5', margin: 0, letterSpacing: '-1px' }}>
+            Prism
+          </h1>
+          <p style={{ color: '#a3a3a3', fontSize: '0.85rem', margin: 0 }}>
+            {isSignUp ? 'Create an account to get started' : 'Sign in to continue'}
+          </p>
         </div>
-        
-        <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'white', marginBottom: '0.5rem' }}>Prism</h1>
-        <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '2.5rem' }}>Discover uncompressed inspiration.</p>
 
-        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
-          <div style={{ position: 'relative' }}>
-            <Mail size={20} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
-            <input 
-              type="email" 
-              placeholder="Email address" 
-              className="input-field"
-              style={{ paddingLeft: '3rem', backgroundColor: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.2)' }}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+        {/* Error / Success banners */}
+        {error === 'RATE_LIMIT' ? (
+          <div style={{
+            backgroundColor: '#fff8e1', border: '1px solid #f59e0b',
+            borderRadius: '8px', padding: '14px 16px',
+            color: '#92400e', fontSize: '0.82rem', marginBottom: '12px',
+            textAlign: 'left', lineHeight: 1.7
+          }}>
+            <strong style={{ display: 'block', marginBottom: '4px' }}>⚠️ Email Send Limit Reached</strong>
+            Supabase free plan only sends ~3 emails/hr. Fix:<br />
+            <strong>Supabase Dashboard → Auth → Email → turn OFF "Confirm email" → Save</strong>
+            <button onClick={() => setError('')}
+              style={{ display: 'block', marginTop: '8px', fontSize: '0.78rem', color: '#92400e', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+            >Dismiss</button>
           </div>
-          
-          <div style={{ position: 'relative' }}>
-            <Lock size={20} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
-            <input 
-              type="password" 
-              placeholder="Password" 
-              className="input-field"
-              style={{ paddingLeft: '3rem', backgroundColor: 'rgba(255,255,255,0.1)', color: 'white', border: '1px solid rgba(255,255,255,0.2)' }}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+        ) : error === 'EMAIL_NOT_CONFIRMED' ? (
+          <div style={{
+            backgroundColor: '#e8f4fd', border: '1px solid #bee3f8',
+            borderRadius: '8px', padding: '14px 16px',
+            color: '#1a56db', fontSize: '0.82rem', marginBottom: '12px',
+            textAlign: 'left', lineHeight: 1.7
+          }}>
+            <strong style={{ display: 'block', marginBottom: '4px' }}>📧 Please confirm your email first</strong>
+            We sent a confirmation link to <strong>{email}</strong>.<br />
+            Click that link, then come back here and log in.<br />
+            <em style={{ fontSize: '0.78rem', opacity: 0.8 }}>Tip: Check spam/junk folder too.</em>
+            <button onClick={() => setError('')}
+              style={{ display: 'block', marginTop: '8px', fontSize: '0.78rem', color: '#1a56db', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+            >Dismiss</button>
           </div>
+        ) : error === 'ALREADY_REGISTERED' ? (
+          <div style={{
+            backgroundColor: '#f0fdf4', border: '1px solid #86efac',
+            borderRadius: '8px', padding: '14px 16px',
+            color: '#15803d', fontSize: '0.82rem', marginBottom: '12px',
+            textAlign: 'left', lineHeight: 1.7
+          }}>
+            <strong style={{ display: 'block', marginBottom: '4px' }}>✅ Account already exists</strong>
+            <strong>{email}</strong> is already registered. Just switch to <strong>Log In</strong> and enter your password.
+            <br />
+            <em style={{ fontSize: '0.78rem', opacity: 0.8 }}>If you signed up but never confirmed your email, go to Supabase Dashboard → Auth → Users → find your email → confirm it manually.</em>
+            <div style={{ marginTop: '10px', display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => { setIsSignUp(false); setError(''); }}
+                style={{ fontSize: '0.8rem', color: '#fff', background: '#15803d', border: 'none', borderRadius: '6px', padding: '5px 12px', cursor: 'pointer', fontWeight: 700 }}
+              >Switch to Log In</button>
+              <button onClick={() => setError('')}
+                style={{ fontSize: '0.78rem', color: '#15803d', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+              >Dismiss</button>
+            </div>
+          </div>
+        ) : error ? (
+          <div style={{
+            backgroundColor: '#fef2f2', border: '1px solid #fca5a5',
+            borderRadius: '6px', padding: '10px 14px',
+            color: '#dc2626', fontSize: '0.82rem', marginBottom: '12px',
+            textAlign: 'left', lineHeight: 1.5
+          }}>
+            {error}
+          </div>
+        ) : null}
+        {success && (
+          <div style={{
+            backgroundColor: '#d4edda', border: '1px solid #c3e6cb',
+            borderRadius: '6px', padding: '10px 14px',
+            color: '#155724', fontSize: '0.82rem', marginBottom: '12px', textAlign: 'left'
+          }}>
+            {success}
+          </div>
+        )}
 
-          <button type="submit" className="btn btn-primary" style={{ marginTop: '0.5rem', width: '100%' }}>
-            Sign In
+        {/* Form */}
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {isSignUp && (
+            <>
+              <input
+                type="text"
+                placeholder="Username"
+                style={inputStyle}
+                value={username}
+                onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s/g, ''))}
+                autoComplete="username"
+                required
+                onFocus={(e) => e.target.style.borderColor = '#666'}
+                onBlur={(e) => e.target.style.borderColor = '#333'}
+              />
+              <input
+                type="text"
+                placeholder="Full Name (optional)"
+                style={inputStyle}
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                onFocus={(e) => e.target.style.borderColor = '#666'}
+                onBlur={(e) => e.target.style.borderColor = '#333'}
+              />
+            </>
+          )}
+          <input
+            type="email"
+            placeholder="Email address"
+            style={inputStyle}
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+            required
+            onFocus={(e) => e.target.style.borderColor = '#666'}
+            onBlur={(e) => e.target.style.borderColor = '#333'}
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            style={inputStyle}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete={isSignUp ? 'new-password' : 'current-password'}
+            required
+            onFocus={(e) => e.target.style.borderColor = '#666'}
+            onBlur={(e) => e.target.style.borderColor = '#333'}
+          />
+
+          <button
+            type="submit"
+            disabled={!canSubmit}
+            style={{ ...primaryBtnStyle(!canSubmit), marginTop: '6px' }}
+          >
+            {isLoading ? (isSignUp ? 'Creating...' : 'Signing in...') : (isSignUp ? 'Sign Up' : 'Log In')}
           </button>
         </form>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', margin: '1.5rem 0', color: 'rgba(255,255,255,0.5)' }}>
-          <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(255,255,255,0.2)' }}></div>
-          <span>OR</span>
-          <div style={{ flex: 1, height: '1px', backgroundColor: 'rgba(255,255,255,0.2)' }}></div>
+        {/* Divider */}
+        <div style={dividerStyle}>
+          <div style={dividerLine}></div>
+          <span style={{ fontSize: '0.78rem', fontWeight: 700, letterSpacing: '1px' }}>OR</span>
+          <div style={dividerLine}></div>
         </div>
 
-        <button 
+        {/* Guest Button */}
+        <button
           onClick={handleGuest}
-          className="btn btn-outline" 
-          style={{ width: '100%', color: 'white', borderColor: 'rgba(255,255,255,0.3)', justifyContent: 'center' }}
+          disabled={isLoading}
+          style={{
+            width: '100%', padding: '9px',
+            borderRadius: '8px', border: '1px solid #333',
+            backgroundColor: '#1a1a1a', color: '#f5f5f5',
+            fontWeight: 600, fontSize: '0.88rem',
+            cursor: isLoading ? 'not-allowed' : 'pointer',
+            transition: 'background 0.15s',
+          }}
+          onMouseEnter={(e) => e.target.style.backgroundColor = '#262626'}
+          onMouseLeave={(e) => e.target.style.backgroundColor = '#1a1a1a'}
         >
-          Continue as Guest <ArrowRight size={18} />
+          {isLoading ? 'Please wait...' : '👁️ Continue as Guest'}
         </button>
+
+        {/* Switch mode */}
+        <p style={{ marginTop: '22px', fontSize: '0.82rem', color: '#a3a3a3' }}>
+          {isSignUp ? 'Have an account?' : "Don't have an account?"}{' '}
+          <button
+            type="button"
+            onClick={() => { setIsSignUp(!isSignUp); setError(''); setSuccess(''); }}
+            style={{ color: '#0095f6', fontWeight: 700, fontSize: '0.82rem', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+          >
+            {isSignUp ? 'Log in' : 'Sign up'}
+          </button>
+        </p>
       </div>
+
+      {/* Footer note */}
+      <p style={{ fontSize: '0.78rem', color: '#8e8e8e', textAlign: 'center', maxWidth: '360px', lineHeight: 1.6 }}>
+        Your credentials are securely stored via Supabase Auth. Photos are saved to Supabase Storage.
+      </p>
     </div>
   );
 };

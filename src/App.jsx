@@ -10,6 +10,9 @@ import { Profile } from './pages/Profile';
 
 const ProtectedRoute = ({ children }) => {
   const user = useStore(state => state.user);
+  const loading = useStore(state => state.loading);
+  
+  if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
   return children;
 };
@@ -25,7 +28,7 @@ export const App = () => {
     };
   }, [initAuth]);
 
-  // Disable right-click globally for "original quality" protection mockup
+  // Disable right-click globally for "quality protection" mockup
   useEffect(() => {
     const handleContextMenu = (e) => {
       if (e.target.tagName === 'IMG') {
@@ -37,7 +40,18 @@ export const App = () => {
   }, []);
 
   if (loading) {
-    return <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading Prism...</div>;
+    return (
+      <div style={{ 
+        height: '100vh', display: 'flex', flexDirection: 'column', 
+        alignItems: 'center', justifyContent: 'center', backgroundColor: '#fafafa'
+      }}>
+        <div className="animate-spin" style={{ 
+          width: '40px', height: '40px', border: '3px solid var(--accent)', 
+          borderTopColor: 'transparent', borderRadius: '50%', marginBottom: '1rem' 
+        }}></div>
+        <p style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Prism Loading...</p>
+      </div>
+    );
   }
 
   return (
