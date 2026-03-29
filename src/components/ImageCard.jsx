@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Heart, Download, Maximize2, Trash2 } from 'lucide-react';
+import { Heart, Download, Maximize2, Trash2, X } from 'lucide-react';
 import { useStore } from '../store/useStore';
 
 export const ImageCard = ({ image }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const { likeImage, deleteImage, user: currentUser, users } = useStore();
   const uploaderNickname = users[image.authorId]?.nickname || image.userNickname || image.user || 'Unknown';
   const isAuthor = currentUser && currentUser.uid === image.authorId;
@@ -122,16 +123,47 @@ export const ImageCard = ({ image }) => {
           </button>
         )}
         <button 
+          onClick={(e) => { e.stopPropagation(); setIsExpanded(true); }}
           className="glass"
           style={{
             width: '32px', height: '32px', borderRadius: '50%',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: 'white', border: 'none'
+            color: 'white', border: 'none', cursor: 'pointer'
           }}
         >
           <Maximize2 size={16} />
         </button>
       </div>
+      
+      {/* Expanded Modal */}
+      {isExpanded && (
+        <div 
+          onClick={(e) => { e.stopPropagation(); setIsExpanded(false); }}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 9999,
+            backgroundColor: 'rgba(0,0,0,0.95)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'zoom-out'
+          }}
+        >
+          <img 
+            src={image.url} 
+            alt={image.title}
+            style={{ maxWidth: '95vw', maxHeight: '95vh', objectFit: 'contain' }}
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button
+            onClick={(e) => { e.stopPropagation(); setIsExpanded(false); }}
+            style={{
+              position: 'absolute', top: '1.5rem', right: '1.5rem',
+              color: 'white', background: 'transparent', border: 'none', cursor: 'pointer',
+              padding: '0.5rem'
+            }}
+          >
+            <X size={32} />
+          </button>
+        </div>
+      )}
     </div>
   );
 };

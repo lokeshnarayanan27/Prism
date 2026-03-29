@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { useParams, Navigate } from 'react-router-dom';
+import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { ImageCard } from '../components/ImageCard';
-import { Image as ImageIcon, Heart, Edit2, Check, User as UserIcon } from 'lucide-react';
+import { Image as ImageIcon, Heart, Edit2, Check, User as UserIcon, LogOut } from 'lucide-react';
 
 export const Profile = () => {
   const { username } = useParams();
@@ -10,6 +10,13 @@ export const Profile = () => {
   const users = useStore(state => state.users);
   const updateNickname = useStore(state => state.updateNickname);
   const images = useStore(state => state.images);
+  const logout = useStore(state => state.logout);
+  const navigate = useNavigate();
+  
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
   
   const isOwnProfile = currentUser && currentUser.username === username;
   const profileUser = isOwnProfile 
@@ -72,14 +79,37 @@ export const Profile = () => {
                 </button>
               </div>
             ) : (
-              <>
-                <h2 style={{ fontSize: '3rem', margin: 0, letterSpacing: '-0.04em' }}>{displayNickname}</h2>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', flexWrap: 'wrap', gap: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+                  <h2 style={{ fontSize: '3rem', margin: 0, letterSpacing: '-0.04em' }}>{displayNickname}</h2>
+                  {isOwnProfile && (
+                    <button onClick={() => setIsEditing(true)} style={{ padding: '0.5rem', color: 'var(--text-secondary)', transition: 'color 0.2s' }}>
+                      <Edit2 size={24} />
+                    </button>
+                  )}
+                </div>
                 {isOwnProfile && (
-                  <button onClick={() => setIsEditing(true)} style={{ padding: '0.5rem', color: 'var(--text-secondary)', transition: 'color 0.2s' }}>
-                    <Edit2 size={24} />
+                  <button 
+                    onClick={handleLogout}
+                    className="mobile-logout-btn"
+                    style={{ 
+                      display: 'flex', alignItems: 'center', gap: '0.5rem', 
+                      padding: '0.5rem 1rem', color: 'var(--danger)', 
+                      backgroundColor: 'transparent', borderRadius: '12px',
+                      fontWeight: 600, fontSize: '0.9rem', border: '1px solid var(--border)'
+                    }}
+                  >
+                    <LogOut size={18} />
+                    <span>Logout</span>
                   </button>
                 )}
-              </>
+                <style>{`
+                  .mobile-logout-btn { display: flex; }
+                  @media (min-width: 768px) {
+                    .mobile-logout-btn { display: none !important; }
+                  }
+                `}</style>
+              </div>
             )}
           </div>
           
