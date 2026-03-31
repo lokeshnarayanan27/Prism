@@ -7,6 +7,7 @@ import { Home } from './pages/Home';
 import { Search } from './pages/Search';
 import { Upload } from './pages/Upload';
 import { Profile } from './pages/Profile';
+import { AdminDashboard } from './pages/AdminDashboard';
 
 const ProtectedRoute = ({ children }) => {
   const user = useStore(state => state.user);
@@ -63,6 +64,7 @@ export const App = () => {
           <Route path="/search" element={<ProtectedRoute><Search /></ProtectedRoute>} />
           <Route path="/upload" element={<ProtectedRoute><Upload /></ProtectedRoute>} />
           <Route path="/profile/:username" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/admin/*" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Layout>

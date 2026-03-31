@@ -46,6 +46,7 @@ const dividerLine = {
 
 export const Login = () => {
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
@@ -55,7 +56,7 @@ export const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
-  const { login, signUp, user } = useStore();
+  const { login, signUp, resetPassword, user } = useStore();
 
   // Navigate to home as soon as the store confirms the user is set.
   // This avoids the race condition where navigate('/') fires before
@@ -70,7 +71,13 @@ export const Login = () => {
     setSuccess('');
     setIsLoading(true);
     try {
-      if (isSignUp) {
+      if (isForgotPassword) {
+        if (!email) { setError('Email is required.'); return; }
+        await resetPassword(email);
+        setSuccess('Password reset link sent! Check your email.');
+        setIsForgotPassword(false);
+        setEmail('');
+      } else if (isSignUp) {
         if (!username) { setError('Username is required.'); return; }
         const data = await signUp(email, password, username, nickname);
         if (!data?.session) {
@@ -114,7 +121,7 @@ export const Login = () => {
     }
   };
 
-  const canSubmit = !isLoading && email.trim() && password.trim() && (isSignUp ? username.trim() : true);
+  const canSubmit = !isLoading && email.trim() && (isForgotPassword ? true : password.trim() && (isSignUp ? username.trim() : true));
 
   return (
     <div style={{
@@ -152,9 +159,12 @@ export const Login = () => {
             Prism
           </h1>
           <p style={{ color: '#a3a3a3', fontSize: '0.85rem', margin: 0 }}>
-            {isSignUp ? 'Create an account to get started' : 'Sign in to continue'}
+            {isForgotPassword ? 'Reset your password' : isSignUp ? 'Create an account to get started' : 'Sign in to continue'}
           </p>
         </div>
+
+        {/* Decorative element */}
+        <div style={{ height: '1px', width: '40px', backgroundColor: '#0095f6', margin: '0 auto 24px', borderRadius: '2px' }}></div>
 
         {/* Error / Success banners */}
         {error === 'RATE_LIMIT' ? (
@@ -229,7 +239,7 @@ export const Login = () => {
 
         {/* Form */}
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {isSignUp && (
+          {isSignUp && !isForgotPassword && (
             <>
               <input
                 type="text"
@@ -264,26 +274,40 @@ export const Login = () => {
             onFocus={(e) => e.target.style.borderColor = '#666'}
             onBlur={(e) => e.target.style.borderColor = '#333'}
           />
-          <input
-            type="password"
-            placeholder="Password"
-            style={inputStyle}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete={isSignUp ? 'new-password' : 'current-password'}
-            required
-            onFocus={(e) => e.target.style.borderColor = '#666'}
-            onBlur={(e) => e.target.style.borderColor = '#333'}
-          />
+          {!isForgotPassword && (
+            <input
+              type="password"
+              placeholder="Password"
+              style={inputStyle}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete={isSignUp ? 'new-password' : 'current-password'}
+              required
+              onFocus={(e) => e.target.style.borderColor = '#666'}
+              onBlur={(e) => e.target.style.borderColor = '#333'}
+            />
+          )}
 
           <button
             type="submit"
             disabled={!canSubmit}
             style={{ ...primaryBtnStyle(!canSubmit), marginTop: '6px' }}
           >
-            {isLoading ? (isSignUp ? 'Creating...' : 'Signing in...') : (isSignUp ? 'Sign Up' : 'Log In')}
+            {isLoading ? (isForgotPassword ? 'Sending...' : isSignUp ? 'Creating...' : 'Signing in...') : (isForgotPassword ? 'Send Reset Link' : isSignUp ? 'Sign Up' : 'Log In')}
           </button>
         </form>
+
+        {!isForgotPassword && !isSignUp && (
+          <div style={{ textAlign: 'center', marginTop: '12px' }}>
+            <button
+              type="button"
+              onClick={() => { setIsForgotPassword(true); setError(''); setSuccess(''); }}
+              style={{ color: '#0095f6', fontSize: '0.82rem', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+            >
+              Forgot password?
+            </button>
+          </div>
+        )}
 
         {/* Divider */}
         <div style={dividerStyle}>
@@ -312,13 +336,17 @@ export const Login = () => {
 
         {/* Switch mode */}
         <p style={{ marginTop: '22px', fontSize: '0.82rem', color: '#a3a3a3' }}>
-          {isSignUp ? 'Have an account?' : "Don't have an account?"}{' '}
+          {isForgotPassword ? 'Remember your password?' : isSignUp ? 'Have an account?' : "Don't have an account?"}{' '}
           <button
             type="button"
-            onClick={() => { setIsSignUp(!isSignUp); setError(''); setSuccess(''); }}
+            onClick={() => { 
+              if (isForgotPassword) { setIsForgotPassword(false); }
+              else { setIsSignUp(!isSignUp); }
+              setError(''); setSuccess(''); 
+            }}
             style={{ color: '#0095f6', fontWeight: 700, fontSize: '0.82rem', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
           >
-            {isSignUp ? 'Log in' : 'Sign up'}
+            {isForgotPassword ? 'Log in' : isSignUp ? 'Log in' : 'Sign up'}
           </button>
         </p>
       </div>
@@ -327,6 +355,49 @@ export const Login = () => {
       <p style={{ fontSize: '0.78rem', color: '#8e8e8e', textAlign: 'center', maxWidth: '360px', lineHeight: 1.6 }}>
         Your credentials are securely stored via Supabase Auth. Photos are saved to Supabase Storage.
       </p>
+
+      {/* Admin Portal Link */}
+      <div style={{
+        position: 'fixed',
+        left: '20px',
+        bottom: '20px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        opacity: 0.4,
+        transition: 'opacity 0.3s ease',
+        cursor: 'default'
+      }}
+      onMouseEnter={(e) => e.currentTarget.style.opacity = 1}
+      onMouseLeave={(e) => e.currentTarget.style.opacity = 0.4}
+      >
+        <div style={{
+          width: '8px',
+          height: '8px',
+          borderRadius: '50%',
+          backgroundColor: '#0095f6',
+          boxShadow: '0 0 10px rgba(0, 149, 246, 0.5)'
+        }}></div>
+        <button
+          onClick={() => {
+            setIsSignUp(false);
+            setIsForgotPassword(false);
+          }}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: '#8e8e8e',
+            fontSize: '0.75rem',
+            fontWeight: 500,
+            cursor: 'pointer',
+            padding: 0,
+            letterSpacing: '0.5px',
+            textTransform: 'uppercase'
+          }}
+        >
+          Admin Portal
+        </button>
+      </div>
     </div>
   );
 };

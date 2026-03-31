@@ -9,13 +9,13 @@ export const Home = () => {
 
   return (
     <div className="animate-fade-in" style={{ paddingBottom: '4rem' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '3rem' }}>
-        <div>
-          <h2 style={{ fontSize: '2.5rem', marginBottom: '0.25rem', letterSpacing: '-0.03em' }}>Discover</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem' }}>Explore high-resolution, original quality photography.</p>
+      <header className="home-header">
+        <div className="home-header-text">
+          <h2 className="home-title">Discover</h2>
+          <p className="home-subtitle">Explore high-resolution photography.</p>
         </div>
-        <div style={{ padding: '0.75rem', borderRadius: '50%', backgroundColor: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }}>
-            <Compass size={24} />
+        <div className="home-header-icon glass">
+            <Compass size={22} />
         </div>
       </header>
 

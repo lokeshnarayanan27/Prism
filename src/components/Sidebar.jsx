@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Home, Search, UploadCloud, User, LogOut } from 'lucide-react';
+import { Home, Search, UploadCloud, User, LogOut, ShieldAlert } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { Logo } from './Logo';
 
@@ -19,6 +19,10 @@ export const Sidebar = () => {
     { name: 'Upload', icon: UploadCloud, path: '/upload' },
     { name: 'Profile', icon: User, path: `/profile/${user?.username || 'user'}` },
   ];
+
+  if (user?.isAdmin) {
+    navItems.push({ name: 'Admin', icon: ShieldAlert, path: '/admin' });
+  }
 
   return (
     <>

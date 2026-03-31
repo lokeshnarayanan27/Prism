@@ -9,6 +9,7 @@ export const useStore = create((set, get) => ({
   images: [],
   users: {},
   loading: true,
+  adminLogs: JSON.parse(localStorage.getItem('prism_admin_logs') || '[]'),
 
   initAuth: () => {
     let initialized = false;
@@ -100,6 +101,7 @@ export const useStore = create((set, get) => ({
           (isGuest ? 'guest_' + supabaseUser.id.substring(0, 5) : 'user'),
         nickname: isGuest ? 'Guest' : 'User',
         isGuest,
+        isAdmin: supabaseUser.email === 'lokeshnarayanan02727@gmail.com',
       };
 
       if (profile) {
@@ -118,6 +120,16 @@ export const useStore = create((set, get) => ({
           .maybeSingle();
 
         if (newProfile) customUser = { ...customUser, ...newProfile, uid: newProfile.id };
+      }
+
+      // Check if profile has admin role if email is different
+      if (profile?.role === 'admin') {
+        customUser.isAdmin = true;
+      }
+      if (profile?.is_banned) {
+        // Log out immediately if banned
+        await supabase.auth.signOut();
+        throw new Error('This account has been banned by the administrator.');
       }
 
       // Set user FIRST before loading images
@@ -280,6 +292,13 @@ export const useStore = create((set, get) => ({
     set({ user: null, images: [], users: {} });
   },
 
+  resetPassword: async (email) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/login',
+    });
+    if (error) throw error;
+  },
+
   updateNickname: async (newNickname) => {
     const { user } = get();
     if (!user) return;
@@ -317,5 +336,49 @@ export const useStore = create((set, get) => ({
     const { error } = await supabase.from('images').delete().eq('id', id);
     if (error) throw error;
     set(state => ({ images: state.images.filter(img => img.id !== id) }));
+  },
+
+  // --- ADMIN FUNCTIONS ---
+  getAllUsers: async () => {
+    const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+    return data || [];
+  },
+
+  blockUser: async (uid, isBlocked) => {
+    const { error } = await supabase.from('profiles').update({ is_banned: isBlocked }).eq('id', uid);
+    if (error) console.error('blockUser error:', error);
+    get().logAdminAction(isBlocked ? 'Blocked user' : 'Unblocked user', uid);
+  },
+
+  deleteUserAccount: async (uid) => {
+    // Delete their images
+    await supabase.from('images').delete().eq('authorId', uid);
+    // Delete profile
+    const { error } = await supabase.from('profiles').delete().eq('id', uid);
+    if (error) console.error('deleteUserAccount error:', error);
+    get().logAdminAction('Deleted user account', uid);
+  },
+
+  deleteImageByAdmin: async (id) => {
+    await supabase.from('images').delete().eq('id', id);
+    set(state => ({ images: state.images.filter(img => img.id !== id) }));
+    get().logAdminAction('Deleted an image', id);
+  },
+
+  logAdminAction: async (action, targetId) => {
+    const adminId = get().user?.uid;
+    if (!adminId) return;
+    
+    // Try to log to db, ignore if table doesn't exist
+    supabase.from('admin_logs').insert([{ action, target_id: targetId, admin_id: adminId }]).then(({error})=>{
+      if (error && error.code !== '42P01') console.error('DB Log Error:', error);
+    });
+
+    // Save in local state
+    set(state => {
+      const newLogs = [{ id: Date.now().toString(), action, targetId, date: new Date().toISOString() }, ...state.adminLogs];
+      localStorage.setItem('prism_admin_logs', JSON.stringify(newLogs.slice(0, 100)));
+      return { adminLogs: newLogs };
+    });
   },
 }));
