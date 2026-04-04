@@ -9,7 +9,7 @@ export const Search = () => {
   const images = useStore(state => state.images);
   const users = useStore(state => state.users);
 
-  const categories = ['All', 'Diorama', 'Scale Cars', 'Figures', 'Terrain', 'Buildings', 'Nature', 'Train Sets', 'Sci-Fi', 'Fantasy', 'Abstract'];
+  const categories = ['All', 'Vehicle', 'Diorama', 'Scale Cars', 'Figures', 'Terrain', 'Buildings', 'Nature', 'Train Sets', 'Sci-Fi', 'Fantasy', 'Abstract'];
 
   const filteredImages = useMemo(() => {
     return images.filter(img => {

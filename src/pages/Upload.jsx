@@ -10,7 +10,7 @@ export const Upload = () => {
   const [fileInfo, setFileInfo] = useState(null); // { name, size, format }
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState('');
-  const [category, setCategory] = useState('Diorama');
+  const [category, setCategory] = useState('Vehicle');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState(null);
@@ -18,7 +18,7 @@ export const Upload = () => {
   const navigate = useNavigate();
   const user = useStore(state => state.user);
 
-  const categories = ['Diorama', 'Scale Cars', 'Figures', 'Terrain', 'Buildings', 'Nature', 'Train Sets', 'Sci-Fi', 'Fantasy', 'Abstract'];
+  const categories = ['Vehicle', 'Diorama', 'Scale Cars', 'Figures', 'Terrain', 'Buildings', 'Nature', 'Train Sets', 'Sci-Fi', 'Fantasy', 'Abstract'];
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -108,14 +108,11 @@ export const Upload = () => {
       const { error: dbError } = await supabase.from('images').insert({
         url: publicUrl,
         title: tags[0] || 'Untitled',     // keep for backward compat
-        tags: tags,
         user: user.username,
         userNickname: user.nickname || user.username,
         authorId: user.uid,
         category,
-        format: fileInfo?.format || 'JPEG',
         likes: 0,
-        height: Math.floor(Math.random() * 200) + 250,
         createdAt: new Date().toISOString()
       });
 
