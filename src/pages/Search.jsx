@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useStore } from '../store/useStore';
 import { ImageCard } from '../components/ImageCard';
-import { Search as SearchIcon, Filter, Layers } from 'lucide-react';
+import { Search as SearchIcon, Filter } from 'lucide-react';
 
 export const Search = () => {
   const [query, setQuery] = useState('');
@@ -9,13 +9,18 @@ export const Search = () => {
   const images = useStore(state => state.images);
   const users = useStore(state => state.users);
 
-  const categories = ['All', 'Nature', 'Travel', 'Technology', 'Art', 'Architecture', 'Urban'];
+  const categories = ['All', 'Diorama', 'Scale Cars', 'Figures', 'Terrain', 'Buildings', 'Nature', 'Train Sets', 'Sci-Fi', 'Fantasy', 'Abstract'];
 
   const filteredImages = useMemo(() => {
     return images.filter(img => {
       const uploaderNickname = users[img.authorId]?.nickname || img.userNickname || img.user || '';
-      const matchesQuery = img.title.toLowerCase().includes(query.toLowerCase()) || 
-                           uploaderNickname.toLowerCase().includes(query.toLowerCase());
+      const searchText = [
+        img.title,
+        ...(img.tags || []),
+        uploaderNickname,
+        img.category
+      ].join(' ').toLowerCase();
+      const matchesQuery = query === '' || searchText.includes(query.toLowerCase());
       const matchesCategory = activeCategory === 'All' || img.category === activeCategory;
       return matchesQuery && matchesCategory;
     });
@@ -24,18 +29,15 @@ export const Search = () => {
   return (
     <div className="animate-fade-in" style={{ paddingBottom: '4rem' }}>
       <header style={{ marginBottom: '3rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem' }}>
-            <Layers size={28} style={{ color: 'var(--accent)' }} />
-            <h2 style={{ fontSize: '2.5rem', margin: 0, letterSpacing: '-0.03em' }}>Explore</h2>
-        </div>
+        <h2 style={{ fontSize: '2.5rem', margin: 0, letterSpacing: '-0.03em' }}>Explore</h2>
         
         <div style={{ position: 'relative', marginBottom: '2rem' }}>
           <SearchIcon size={24} style={{ position: 'absolute', left: '1.5rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
           <input 
             type="text" 
-            placeholder="Search original quality images, authors, or categories..." 
+            placeholder="Search scenes, tags, makers..." 
             className="input-field"
-            style={{ padding: '1.5rem 1.5rem 1.5rem 4rem', fontSize: '1.25rem', borderRadius: '24px', boxShadow: '0 4px 20px -5px rgba(0,0,0,0.05)' }}
+            style={{ padding: '1.25rem 1.25rem 1.25rem 4rem', fontSize: '1.1rem', borderRadius: '20px' }}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -76,8 +78,8 @@ export const Search = () => {
       ) : (
         <div style={{ textAlign: 'center', padding: '8rem 0', color: 'var(--text-secondary)', backgroundColor: 'var(--bg-secondary)', borderRadius: '32px' }}>
           <SearchIcon size={64} style={{ margin: '0 auto 1.5rem', opacity: 0.15 }} />
-          <h3 style={{ fontSize: '1.5rem', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>No uncompressed results.</h3>
-          <p>Try searching for a different term or category.</p>
+          <h3 style={{ fontSize: '1.5rem', color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Nothing found.</h3>
+          <p>Try a different tag, maker name, or category.</p>
         </div>
       )}
     </div>

@@ -8,11 +8,12 @@ import { Search } from './pages/Search';
 import { Upload } from './pages/Upload';
 import { Profile } from './pages/Profile';
 import { AdminDashboard } from './pages/AdminDashboard';
+import { ImageDetail } from './pages/ImageDetail';
 
 const ProtectedRoute = ({ children }) => {
   const user = useStore(state => state.user);
   const loading = useStore(state => state.loading);
-  
+
   if (loading) return null;
   if (!user) return <Navigate to="/login" replace />;
   return children;
@@ -42,15 +43,15 @@ export const App = () => {
 
   if (loading) {
     return (
-      <div style={{ 
-        height: '100vh', display: 'flex', flexDirection: 'column', 
-        alignItems: 'center', justifyContent: 'center', backgroundColor: '#fafafa'
+      <div style={{
+        height: '100vh', display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--bg-primary)'
       }}>
-        <div className="animate-spin" style={{ 
-          width: '40px', height: '40px', border: '3px solid var(--accent)', 
-          borderTopColor: 'transparent', borderRadius: '50%', marginBottom: '1rem' 
+        <div className="animate-spin" style={{
+          width: '40px', height: '40px', border: '3px solid var(--accent)',
+          borderTopColor: 'transparent', borderRadius: '50%', marginBottom: '1rem'
         }}></div>
-        <p style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Prism Loading...</p>
+        <p style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Prism Loading...</p>
       </div>
     );
   }
@@ -64,6 +65,7 @@ export const App = () => {
           <Route path="/search" element={<ProtectedRoute><Search /></ProtectedRoute>} />
           <Route path="/upload" element={<ProtectedRoute><Upload /></ProtectedRoute>} />
           <Route path="/profile/:username" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/image/:id" element={<ProtectedRoute><ImageDetail /></ProtectedRoute>} />
           <Route path="/admin/*" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

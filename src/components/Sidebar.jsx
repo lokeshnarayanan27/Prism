@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Home, Search, UploadCloud, User, LogOut, ShieldAlert } from 'lucide-react';
+import { Home, Search, PlusSquare, User, LogOut, ShieldAlert } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { Logo } from './Logo';
 
@@ -13,38 +13,46 @@ export const Sidebar = () => {
     navigate('/login');
   };
 
-  const navItems = [
-    { name: 'Home', icon: Home, path: '/' },
-    { name: 'Search', icon: Search, path: '/search' },
-    { name: 'Upload', icon: UploadCloud, path: '/upload' },
-    { name: 'Profile', icon: User, path: `/profile/${user?.username || 'user'}` },
+  // Desktop sidebar nav items
+  const desktopNavItems = [
+    { name: 'Home',    icon: Home,       path: '/' },
+    { name: 'Search',  icon: Search,     path: '/search' },
+    { name: 'Upload',  icon: PlusSquare, path: '/upload' },
+    { name: 'Profile', icon: User,       path: `/profile/${user?.username || 'user'}` },
   ];
 
   if (user?.isAdmin) {
-    navItems.push({ name: 'Admin', icon: ShieldAlert, path: '/admin' });
+    desktopNavItems.push({ name: 'Admin', icon: ShieldAlert, path: '/admin' });
   }
+
+  // Bottom nav: Home → Search → Post(+) → Profile (ordered as requested)
+  const bottomNavItems = [
+    { name: 'Home',    icon: Home,       path: '/' },
+    { name: 'Search',  icon: Search,     path: '/search' },
+    { name: 'Post',    icon: PlusSquare, path: '/upload', isPost: true },
+    { name: 'Profile', icon: User,       path: `/profile/${user?.username || 'user'}` },
+  ];
 
   return (
     <>
-      <aside style={{
+      {/* ── Desktop Sidebar ── */}
+      <aside className="sidebar-desktop" style={{
         position: 'fixed', left: 0, top: 0, bottom: 0,
         width: '240px', backgroundColor: 'var(--bg-secondary)',
         borderRight: '1px solid var(--border)', display: 'flex',
-        flexDirection: 'column', padding: '2rem 1.5rem',
-        zIndex: 50
-      }} className="sidebar-desktop">
+        flexDirection: 'column', padding: '2rem 1.5rem', zIndex: 50
+      }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '3rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Logo size={28} />
-          </div>
+          <Logo size={28} />
           <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0, letterSpacing: '-0.05em', color: 'var(--text-primary)' }}>Prism</h1>
         </div>
 
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1 }}>
-          {navItems.map((item) => (
+          {desktopNavItems.map((item) => (
             <NavLink
               key={item.name}
               to={item.path}
+              end={item.path === '/'}
               style={({ isActive }) => ({
                 display: 'flex', alignItems: 'center', gap: '1rem',
                 padding: '0.75rem 1rem', borderRadius: '12px',
@@ -61,54 +69,57 @@ export const Sidebar = () => {
           ))}
         </nav>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: 'auto' }}>
-          <button 
-            onClick={handleLogout}
-            style={{ 
-              display: 'flex', alignItems: 'center', gap: '1rem',
-              padding: '0.75rem 1rem', color: 'var(--danger)',
-              borderRadius: '12px', transition: 'all 0.2s', width: '100%',
-              textAlign: 'left'
-            }}
-            className="sidebar-btn"
-          >
-            <LogOut size={20} />
-            Logout
-          </button>
-        </div>
+        <button
+          onClick={handleLogout}
+          className="sidebar-btn"
+          style={{
+            display: 'flex', alignItems: 'center', gap: '1rem',
+            padding: '0.75rem 1rem', color: 'var(--danger)',
+            borderRadius: '12px', transition: 'all 0.2s', width: '100%',
+            textAlign: 'left', marginTop: 'auto'
+          }}
+        >
+          <LogOut size={20} />
+          Logout
+        </button>
       </aside>
 
-      <style>{`
-        .sidebar-desktop { display: none !important; }
-        .bottom-nav { display: flex !important; }
-        @media (min-width: 768px) {
-          .sidebar-desktop { display: flex !important; }
-          .bottom-nav { display: none !important; }
-        }
-        .sidebar-btn:hover { background-color: var(--bg-tertiary); }
-      `}</style>
-      
-      <nav className="bottom-nav glass" style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0,
-        height: '60px', zIndex: 50, display: 'none',
-        justifyContent: 'space-around', alignItems: 'center',
-        padding: '0 1rem', borderTop: '1px solid var(--border)'
-      }}>
-        {navItems.map((item) => (
+      {/* ── Mobile Bottom Navigation ── */}
+      <nav className="bottom-nav glass">
+        {bottomNavItems.map((item) => (
           <NavLink
             key={item.name}
             to={item.path}
-            style={({ isActive }) => ({
-              display: 'flex', flexDirection: 'column', alignItems: 'center',
-              color: isActive ? 'var(--accent)' : 'var(--text-secondary)',
-              padding: '0.5rem'
-            })}
+            end={item.path === '/'}
+            className={({ isActive }) =>
+              `bottom-nav-item ${isActive ? 'active' : ''} ${item.isPost ? 'post-btn' : ''}`
+            }
           >
-            <item.icon size={22} />
-            <span style={{ fontSize: '10px', marginTop: '2px', fontWeight: 500 }}>{item.name}</span>
+            {item.isPost ? (
+              <div className="post-icon-wrap">
+                <item.icon size={24} />
+              </div>
+            ) : (
+              <>
+                <item.icon size={22} />
+                <span>{item.name}</span>
+              </>
+            )}
           </NavLink>
         ))}
       </nav>
+
+      <style>{`
+        .sidebar-desktop { display: none !important; }
+        .bottom-nav      { display: flex   !important; }
+
+        @media (min-width: 769px) {
+          .sidebar-desktop { display: flex !important; }
+          .bottom-nav      { display: none !important; }
+        }
+
+        .sidebar-btn:hover { background-color: var(--bg-tertiary); }
+      `}</style>
     </>
   );
 };

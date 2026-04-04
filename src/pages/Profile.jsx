@@ -1,8 +1,9 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
 import { useParams, Navigate, useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { ImageCard } from '../components/ImageCard';
-import { Image as ImageIcon, Heart, Edit2, Check, User as UserIcon, LogOut } from 'lucide-react';
+import { Image as ImageIcon, Edit2, Check, LogOut, Camera } from 'lucide-react';
+import { supabase } from '../supabase/supabase';
 
 export const Profile = () => {
   const { username } = useParams();
@@ -12,25 +13,48 @@ export const Profile = () => {
   const images = useStore(state => state.images);
   const logout = useStore(state => state.logout);
   const navigate = useNavigate();
-  
+  const avatarInputRef = useRef(null);
+
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
-  
+
   const isOwnProfile = currentUser && currentUser.username === username;
-  const profileUser = isOwnProfile 
-    ? currentUser 
+  const profileUser = isOwnProfile
+    ? currentUser
     : (Object.values(users).find(u => u.username === username) || { username, nickname: username });
   const displayNickname = profileUser.nickname || profileUser.username;
 
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(displayNickname);
+  const [avatarUrl, setAvatarUrl] = useState(profileUser.avatar_url || null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
 
   const userImages = useMemo(() => images.filter(img => img.user === username), [images, username]);
-  const totalLikes = useMemo(() => userImages.reduce((sum, img) => sum + img.likes, 0), [userImages]);
 
   if (!username) return <Navigate to="/" />;
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !currentUser) return;
+    setAvatarUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const filePath = `avatars/${currentUser.uid}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from('images')
+        .upload(filePath, file, { upsert: true, cacheControl: '3600' });
+      if (upErr) throw upErr;
+      const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(filePath);
+      await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', currentUser.uid);
+      setAvatarUrl(publicUrl);
+    } catch (err) {
+      console.error('Avatar upload failed:', err);
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
 
   const handleSaveNickname = () => {
     if (editName.trim()) {
@@ -43,107 +67,75 @@ export const Profile = () => {
 
   return (
     <div className="animate-fade-in" style={{ paddingBottom: '4rem' }}>
-      <header className="glass" style={{
-        padding: '3.5rem', borderRadius: '32px', marginBottom: '3.5rem',
-        display: 'flex', alignItems: 'center', gap: '2.5rem', flexWrap: 'wrap',
-        position: 'relative', overflow: 'hidden'
-      }}>
-        {/* Background Accent */}
-        <div style={{ position: 'absolute', top: 0, right: 0, width: '300px', height: '300px', background: 'radial-gradient(circle, var(--accent) 0%, transparent 70%)', opacity: 0.05, filter: 'blur(50px)' }}></div>
-
-        <div style={{
-          width: '140px', height: '140px', borderRadius: '48px',
-          background: 'linear-gradient(135deg, var(--accent), #e879f9)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: 'white', fontSize: '3.5rem', fontWeight: 800,
-          boxShadow: '0 20px 40px -10px rgba(124, 58, 237, 0.4)',
-          position: 'relative', zIndex: 1
-        }}>
-          {displayNickname.charAt(0).toUpperCase()}
+      <header className="profile-header glass">
+        {/* Avatar */}
+        <div className="profile-avatar-wrap">
+          {avatarUrl ? (
+            <img src={avatarUrl} alt={displayNickname} className="profile-avatar-img" />
+          ) : (
+            <div className="profile-avatar-placeholder">
+              {displayNickname.charAt(0).toUpperCase()}
+            </div>
+          )}
+          {isOwnProfile && (
+            <>
+              <button
+                className="profile-avatar-edit"
+                onClick={() => avatarInputRef.current?.click()}
+                disabled={avatarUploading}
+                title="Change profile picture"
+              >
+                {avatarUploading ? '…' : <Camera size={16} />}
+              </button>
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handleAvatarChange}
+              />
+            </>
+          )}
         </div>
 
-        <div style={{ flex: 1, position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginBottom: '0.5rem' }}>
-            {isEditing ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <input 
-                  type="text" 
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  className="input-field"
-                  style={{ fontSize: '2.5rem', padding: '0.75rem 1rem', fontWeight: 700, minWidth: '350px', backgroundColor: 'var(--bg-primary)' }}
-                  autoFocus
-                />
-                <button onClick={handleSaveNickname} className="btn-primary" style={{ width: '56px', height: '56px', borderRadius: '16px' }}>
-                  <Check size={28} />
-                </button>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', flexWrap: 'wrap', gap: '1rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-                  <h2 style={{ fontSize: '3rem', margin: 0, letterSpacing: '-0.04em' }}>{displayNickname}</h2>
-                  {isOwnProfile && (
-                    <button onClick={() => setIsEditing(true)} style={{ padding: '0.5rem', color: 'var(--text-secondary)', transition: 'color 0.2s' }}>
-                      <Edit2 size={24} />
-                    </button>
-                  )}
-                </div>
+        {/* Name + actions */}
+        <div className="profile-info">
+          {isEditing ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <input
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="input-field"
+                style={{ fontSize: '1.8rem', padding: '0.6rem 1rem', fontWeight: 700, backgroundColor: 'var(--bg-primary)' }}
+                autoFocus
+              />
+              <button onClick={handleSaveNickname} className="btn btn-primary" style={{ padding: '0.6rem 1rem', borderRadius: '12px' }}>
+                <Check size={20} />
+              </button>
+            </div>
+          ) : (
+            <div className="profile-name-row">
+              <h2 className="profile-display-name">{displayNickname}</h2>
+              <div className="profile-name-actions">
                 {isOwnProfile && (
-                  <button 
-                    onClick={handleLogout}
-                    className="mobile-logout-btn"
-                    style={{ 
-                      display: 'flex', alignItems: 'center', gap: '0.5rem', 
-                      padding: '0.5rem 1rem', color: 'var(--danger)', 
-                      backgroundColor: 'transparent', borderRadius: '12px',
-                      fontWeight: 600, fontSize: '0.9rem', border: '1px solid var(--border)'
-                    }}
-                  >
-                    <LogOut size={18} />
-                    <span>Logout</span>
+                  <button onClick={() => setIsEditing(true)} className="profile-icon-btn" title="Edit name">
+                    <Edit2 size={18} />
                   </button>
                 )}
-                <style>{`
-                  .mobile-logout-btn { display: flex; }
-                  @media (min-width: 768px) {
-                    .mobile-logout-btn { display: none !important; }
-                  }
-                `}</style>
-              </div>
-            )}
-          </div>
-          
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', maxWidth: '600px', fontSize: '1.1rem' }}>
-            A dedicated Prism artist capturing and sharing the world in uncompressed, original fidelity.
-          </p>
-
-          <div style={{ display: 'flex', gap: '2.5rem', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div style={{ color: 'var(--accent)', backgroundColor: 'var(--bg-tertiary)', padding: '0.75rem', borderRadius: '16px' }}>
-                <ImageIcon size={24} />
-              </div>
-              <div>
-                <span style={{ display: 'block', fontSize: '1.5rem', fontWeight: 800, lineHeight: 1 }}>{userImages.length}</span>
-                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Shots Published</span>
+                {isOwnProfile && (
+                  <button onClick={handleLogout} className="profile-icon-btn logout" title="Logout">
+                    <LogOut size={18} />
+                  </button>
+                )}
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div style={{ color: '#ef4444', backgroundColor: 'var(--bg-tertiary)', padding: '0.75rem', borderRadius: '16px' }}>
-                <Heart size={24} fill="#ef4444" />
-              </div>
-              <div>
-                <span style={{ display: 'block', fontSize: '1.5rem', fontWeight: 800, lineHeight: 1 }}>{totalLikes}</span>
-                <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Likes Received</span>
-              </div>
-            </div>
-          </div>
+          )}
+          <p className="profile-username">@{username}</p>
         </div>
       </header>
 
-      <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '1.5rem', marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-        <h3 style={{ fontSize: '1.75rem', margin: 0, letterSpacing: '-0.02em' }}>Original Gallery</h3>
-        <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Showing {userImages.length} items</span>
-      </div>
+
       
       {userImages.length > 0 ? (
         <div className="masonry-grid">

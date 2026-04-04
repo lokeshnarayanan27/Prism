@@ -1,7 +1,6 @@
 import React from 'react';
 import { useStore } from '../store/useStore';
 import { ImageCard } from '../components/ImageCard';
-import { Compass } from 'lucide-react';
 import { Logo } from '../components/Logo';
 
 export const Home = () => {
@@ -10,13 +9,7 @@ export const Home = () => {
   return (
     <div className="animate-fade-in" style={{ paddingBottom: '4rem' }}>
       <header className="home-header">
-        <div className="home-header-text">
-          <h2 className="home-title">Discover</h2>
-          <p className="home-subtitle">Explore high-resolution photography.</p>
-        </div>
-        <div className="home-header-icon glass">
-            <Compass size={22} />
-        </div>
+        <h2 className="home-title">Tiny World</h2>
       </header>
 
       {images.length > 0 ? (
@@ -30,8 +23,8 @@ export const Home = () => {
           <div style={{ margin: '0 auto 1.5rem', opacity: 0.3, display: 'flex', justifyContent: 'center' }}>
             <Logo size={64} />
           </div>
-          <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>No images captured yet.</h3>
-          <p style={{ maxWidth: '400px', margin: '0 auto' }}>Be the first one to capture and share uncompressed inspiration with the community.</p>
+          <h3 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>No scenes captured yet.</h3>
+          <p style={{ maxWidth: '400px', margin: '0 auto' }}>Be the first to share your miniature world with the community.</p>
         </div>
       )}
     </div>

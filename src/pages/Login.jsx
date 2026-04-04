@@ -6,11 +6,11 @@ import { Logo } from '../components/Logo';
 const inputStyle = {
   width: '100%',
   padding: '10px 14px',
-  border: '1px solid #333',
+  border: '1px solid #2A2618',
   borderRadius: '5px',
-  backgroundColor: '#1a1a1a',
+  backgroundColor: '#161410',
   fontSize: '0.9rem',
-  color: '#f5f5f5',
+  color: '#F0EAD6',
   outline: 'none',
   transition: 'border-color 0.2s',
   boxSizing: 'border-box',
@@ -21,8 +21,8 @@ const primaryBtnStyle = (disabled) => ({
   padding: '9px',
   borderRadius: '8px',
   border: 'none',
-  backgroundColor: disabled ? '#b2dffc' : '#0095f6',
-  color: '#fff',
+  backgroundColor: disabled ? '#4a6035' : '#6B8C4A',
+  color: '#F0EAD6',
   fontWeight: 700,
   fontSize: '0.9rem',
   cursor: disabled ? 'not-allowed' : 'pointer',
@@ -35,13 +35,13 @@ const dividerStyle = {
   alignItems: 'center',
   gap: '18px',
   margin: '14px 0',
-  color: '#737373',
+  color: '#6B6050',
 };
 
 const dividerLine = {
   flex: 1,
   height: '1px',
-  backgroundColor: '#333',
+  backgroundColor: '#2A2618',
 };
 
 export const Login = () => {
@@ -126,7 +126,7 @@ export const Login = () => {
   return (
     <div style={{
       minHeight: '100vh',
-      backgroundColor: '#0a0a0a',
+      backgroundColor: '#0c0b08',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
@@ -137,8 +137,8 @@ export const Login = () => {
 
       {/* Main Card */}
       <div style={{
-        backgroundColor: '#121212',
-        border: '1px solid #262626',
+        backgroundColor: '#161410',
+        border: '1px solid #2A2618',
         borderRadius: '12px',
         padding: '40px 40px 28px',
         width: '100%',
@@ -155,16 +155,16 @@ export const Login = () => {
           }}>
             <Logo size={42} />
           </div>
-          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#f5f5f5', margin: 0, letterSpacing: '-1px' }}>
+          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#F0EAD6', margin: 0, letterSpacing: '-1px' }}>
             Prism
           </h1>
-          <p style={{ color: '#a3a3a3', fontSize: '0.85rem', margin: 0 }}>
-            {isForgotPassword ? 'Reset your password' : isSignUp ? 'Create an account to get started' : 'Sign in to continue'}
+          <p style={{ color: '#9A8F78', fontSize: '0.85rem', margin: 0 }}>
+            {isForgotPassword ? 'Reset your password' : isSignUp ? 'Join the miniature world' : 'Sign in to continue'}
           </p>
         </div>
 
         {/* Decorative element */}
-        <div style={{ height: '1px', width: '40px', backgroundColor: '#0095f6', margin: '0 auto 24px', borderRadius: '2px' }}></div>
+        <div style={{ height: '1px', width: '40px', backgroundColor: '#6B8C4A', margin: '0 auto 24px', borderRadius: '2px' }}></div>
 
         {/* Error / Success banners */}
         {error === 'RATE_LIMIT' ? (
@@ -322,14 +322,14 @@ export const Login = () => {
           disabled={isLoading}
           style={{
             width: '100%', padding: '9px',
-            borderRadius: '8px', border: '1px solid #333',
-            backgroundColor: '#1a1a1a', color: '#f5f5f5',
+            borderRadius: '8px', border: '1px solid #2A2618',
+            backgroundColor: '#161410', color: '#F0EAD6',
             fontWeight: 600, fontSize: '0.88rem',
             cursor: isLoading ? 'not-allowed' : 'pointer',
             transition: 'background 0.15s',
           }}
-          onMouseEnter={(e) => e.target.style.backgroundColor = '#262626'}
-          onMouseLeave={(e) => e.target.style.backgroundColor = '#1a1a1a'}
+          onMouseEnter={(e) => e.target.style.backgroundColor = '#221f15'}
+          onMouseLeave={(e) => e.target.style.backgroundColor = '#161410'}
         >
           {isLoading ? 'Please wait...' : '👁️ Continue as Guest'}
         </button>
@@ -351,10 +351,7 @@ export const Login = () => {
         </p>
       </div>
 
-      {/* Footer note */}
-      <p style={{ fontSize: '0.78rem', color: '#8e8e8e', textAlign: 'center', maxWidth: '360px', lineHeight: 1.6 }}>
-        Your credentials are securely stored via Supabase Auth. Photos are saved to Supabase Storage.
-      </p>
+
 
       {/* Admin Portal Link */}
       <div style={{
@@ -375,8 +372,8 @@ export const Login = () => {
           width: '8px',
           height: '8px',
           borderRadius: '50%',
-          backgroundColor: '#0095f6',
-          boxShadow: '0 0 10px rgba(0, 149, 246, 0.5)'
+          backgroundColor: '#6B8C4A',
+          boxShadow: '0 0 10px rgba(107, 140, 74, 0.4)'
         }}></div>
         <button
           onClick={() => {
@@ -386,7 +383,7 @@ export const Login = () => {
           style={{
             background: 'none',
             border: 'none',
-            color: '#8e8e8e',
+            color: '#9A8F78',
             fontSize: '0.75rem',
             fontWeight: 500,
             cursor: 'pointer',
